@@ -1,12 +1,14 @@
+import { Product } from "./product.js";
+
 export class ShoppingCart {
     constructor(uid) {
         this.uid = uid;
-        this.items = []; 
+        this.items = [];
     }
 
-    addItem(product){
+    addItem(product) {
         const index = this.items.findIndex(e => product.docId == e.docId);
-        if(index<0){
+        if (index < 0) {
             const newItem = product.clone();
             newItem.qty = 1;
             this.items.push(newItem);
@@ -15,29 +17,44 @@ export class ShoppingCart {
         }
     }
 
-    removeItem(product){
+    removeItem(product) {
         const index = this.items.findIndex(e => product.docId == e.docId);
-        if(index >= 0){
+        if (index >= 0) {
             --this.items[index].qty;
-            if(this.items[index].qty == 0){
+            if (this.items[index].qty == 0) {
                 this.items.splice(index, 1);
             }
         }
     }
 
-    getTotalQty(){
+    getTotalQty() {
         let n = 0;
-        this.items.forEach(p => n+= p.qty);
+        this.items.forEach(p => n += p.qty);
         return n;
     }
 
-    getTotalPrice(){
+    getTotalPrice() {
         let total = 0;
-        this.items.forEach(p=> total += p.price * p.qty);
+        this.items.forEach(p => total += p.price * p.qty);
         return total;
     }
 
-    clear(){
+    clear() {
         this.items.length = 0;
     }
+
+    serialize(timestamp) {
+        const serializedItems = this.items.map(e => e.serialize());
+        return { uid: this.uid, items: serializedItems, timestamp };
+    }
+
+    static deserialize(data) {
+        const sc = new ShoppingCart(data.uid);
+        if (data.items && Array.isArray(data.items)) {
+            sc.items = data.items.map(e => new Product(e));
+        }
+        sc.timestamp = data.timestamp;
+        return sc;
+    }
+
 }
